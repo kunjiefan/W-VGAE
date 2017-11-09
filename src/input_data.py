@@ -29,11 +29,8 @@ def load_data():
     falseEdges = np.vstack((X,Y)).transpose()
 
     
-    #allx_arr = allx.toarray()
-    #allx_scaled = scale(allx_arr)
-    #features = sp.csr_matrix(allx_scaled)
     features = normalize(allx)
-    #features = allx
+    
     adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
 
     return adj, features, falseEdges, graph
