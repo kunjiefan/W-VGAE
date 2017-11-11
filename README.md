@@ -14,8 +14,9 @@ The auto-encoder part of our model is improved based on the implementation by T.
 
 ### Run
 > cd src
+
 > python main.py
 
-You can specify the dataset by using "--dataset <dataset>", you can also specify the parameter weight rate by using "--wr <int>"
+You can specify the dataset by using "--dataset E.coli", for example, you can also specify the parameter weight rate by using "--wr 10.0"
 
 
