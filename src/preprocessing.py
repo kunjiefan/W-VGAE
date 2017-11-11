@@ -28,19 +28,7 @@ def construct_feed_dict(adj_normalized, adj, features, placeholders):
     feed_dict.update({placeholders['adj_orig']: adj})
     return feed_dict
 
-def construct_optimizer_mask(posGraph, falseEdge):
-    mask = np.full((len(posGraph),len(posGraph)),False)
-    for x,y in posGraph.items():
-        for z in y:
-            mask[x][z] = True
-    for x in falseEdge:
-        mask[x[0]][x[1]] = True
-        mask[x[1]][x[0]] = True
-    
-    return mask.reshape(-1)
-
-def construct_optimizer_list(graph, posEdges, falseEdges):
-    num_node = len(graph)
+def construct_optimizer_list(num_node, posEdges, falseEdges):
     mask_index = []
     for x in posEdges:
         temp = x[0] * num_node + x[1]
@@ -51,10 +39,9 @@ def construct_optimizer_list(graph, posEdges, falseEdges):
 
     return np.array(mask_index)
 
-def make_test_edges(weight_rate, adj, falseEdges):
-    # Function to build test set with 10% positive links
+def make_test_edges(weightRate, adj, falseEdges):
+    # Function to build test set with 10% positive links and 10% highly negative links
     # NOTE: Splits are randomized and results might slightly deviate from reported numbers in the paper.
-    # TODO: Clean up.
 
     # Remove diagonal elements
     adj = adj - sp.dia_matrix((adj.diagonal()[np.newaxis, :], [0]), shape=adj.shape)
@@ -67,9 +54,11 @@ def make_test_edges(weight_rate, adj, falseEdges):
     edges = adj_tuple[0]
     edges_all = sparse_to_tuple(adj)[0]
 
-    num_test = int(np.floor(edges.shape[0] / 10.))
+    posNum = edges.shape[0]
+    num_test = int(np.floor(posNum / 10.))
     num_train = edges.shape[0] - num_test
 
+    #generate positive sets
     all_edge_idx = range(edges.shape[0])
     np.random.shuffle(all_edge_idx)
     train_edge_idx = all_edge_idx[:num_train]
@@ -80,6 +69,8 @@ def make_test_edges(weight_rate, adj, falseEdges):
     falseNum = falseEdges.shape[0]
     num_neg_test = int(np.floor(falseNum/10.))
     num_neg_train = falseNum - num_neg_test
+
+    #generate negative sets
     all_edge_neg_idx = range(falseNum)
     np.random.shuffle(all_edge_neg_idx)
     train_edge_neg_idx = all_edge_neg_idx[:num_neg_train]
@@ -87,12 +78,10 @@ def make_test_edges(weight_rate, adj, falseEdges):
     train_edges_false = falseEdges[train_edge_neg_idx]
     test_edges_false = falseEdges[test_edge_neg_idx]
 
-    # Re-build adj matrix
-    #adj_train = sp.csr_matrix((data, (train_edges[:, 0], train_edges[:, 1])), shape=adj.shape)
-    #adj_train = adj_train + adj_train.T
+    # Re-build training adjacency matrix
     adj_train = np.zeros(adj.shape)
-    facNeg = -0.0001
-    facPos = weight_rate * facNeg
+    facNeg = -0.001
+    facPos = weightRate * facNeg
 
     for x in train_edges:
         adj_train[x[0]][x[1]] = facPos
@@ -102,7 +91,7 @@ def make_test_edges(weight_rate, adj, falseEdges):
         adj_train[x[1]][x[0]] = facNeg
     adj_train = sp.csr_matrix(adj_train)
 
-    # NOTE: these edge lists only contain single direction of edge!
+
     return adj_train, train_edges, train_edges_false, test_edges, test_edges_false
 
 

@@ -12,7 +12,7 @@ def calculate_metrics(y_label, y_pred):
                 FP = FP + 1
             else:
                 FN = FN + 1
-
+    
     accuracy = (TP + TN) / float(TP + TN + FP + FN)
     sensitivity = TP / float(TP + FN)
     specificity = TN / float(TN + FP)

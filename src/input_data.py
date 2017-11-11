@@ -5,21 +5,18 @@ import scipy.sparse as sp
 from sklearn.preprocessing import scale,normalize
 
 
-def load_data():
-    # load the data: x, tx, allx, graph
-    names = ['allx_ct', 'graph']
-    objects = []
-    for i in range(len(names)):
-        objects.append(pkl.load(open("../data/hprd-07/test1/NoElimilation/{}.pkl".format(names[i]))))
-    allx, graph = tuple(objects)
-    
-    #deal with negative samples
-    with open("../data/hprd-07/test1/NoElimilation/falseEdge.txt",'r') as f:
-        lines = f.readlines()
+def load_data(dataset):
+    with open('../data/'+dataset+'/allx_ct.pkl') as f:
+        allx = pkl.load(f)
+    with open('../data/'+dataset+'/PositiveEdges.txt') as f:
+        posEdges = f.readlines()
+    with open('../data/'+dataset+'/NegativeEdges.txt') as f:
+        negEdges = f.readlines()
 
+    #generate highly negative sets
     rows = []
     cols = []
-    for line in lines:
+    for line in negEdges:
         x,y = line.split()
         rows.append(int(x))
         cols.append(int(y))
@@ -28,9 +25,17 @@ def load_data():
     Y = np.array(cols)
     falseEdges = np.vstack((X,Y)).transpose()
 
-    
+    #CT codings for proteins
     features = normalize(allx)
-    
-    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
 
-    return adj, features, falseEdges, graph
+    #generate adjacency matrix
+    num_node = allx.shape[0]
+    adj = np.zeros((num_node,num_node))
+    for line in posEdges:
+        x,y = line.split()
+        adj[int(x)][int(y)] = 1
+        adj[int(y)][int(x)] = 1
+
+    adj = sp.csr_matrix(adj)
+
+    return adj, features, falseEdges

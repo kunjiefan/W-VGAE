@@ -4,6 +4,7 @@ import numpy as np
 from metrics import calculate_metrics
 
 def generate_data(emb, posEdges, negEdges):
+    #stack codings of two proteins together
     posNum = posEdges.shape[0]
     negNum = negEdges.shape[0]
 
@@ -36,13 +37,12 @@ def train_nn(X_train, Y_train, X_test, Y_test):
     model.compile(loss='categorical_crossentropy',
                     optimizer='adam',
                     metrics=['accuracy'])
-    model.fit(X_train, Y_train, epochs=150, batch_size=128,verbose=0)
+    model.fit(X_train, Y_train, epochs=200, batch_size=128, verbose=1)
 
     y_prob = model.predict(X_test)
     y_classes = y_prob.argmax(axis=-1)
     y_true = Y_test[:,1]
     acc = calculate_metrics(y_true, y_classes)
-    print acc
     return acc
     
 
